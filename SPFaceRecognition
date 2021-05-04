@@ -1,0 +1,173 @@
+using AForge.Video;
+using AForge.Video.DirectShow;
+using Emgu.CV;
+using Emgu.CV.Structure;
+using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Data;
+using System.Drawing;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows.Forms;
+using System.Speech;
+using System.Speech.Synthesis;
+using System.Speech.Recognition;
+using System.IO;
+using System.IO.Ports;
+using System.Diagnostics;
+
+namespace ASD
+{
+    public partial class FaceRec : Form
+    {
+        public FaceRec()
+        {
+            InitializeComponent();
+        }
+
+        private void pictureBox1_Click(object sender, EventArgs e)
+        {
+
+        }
+        ///                               ///
+        /// Serial Port For Arduino       ///   
+        ///                               ///
+        SerialPort port = new SerialPort("COM5", 9600, Parity.None, 8, StopBits.One);
+
+
+        FilterInfoCollection filter;
+        VideoCaptureDevice device;
+
+        ///                               ///
+        /// Voice Recongnitions Variables ///   
+        ///                               ///
+        SpeechSynthesizer s = new SpeechSynthesizer();
+        SpeechRecognitionEngine sr = new SpeechRecognitionEngine();
+        PromptBuilder pb = new PromptBuilder();
+
+        private void FaceRec_Load(object sender, EventArgs e)
+        {
+            filter = new FilterInfoCollection(FilterCategory.VideoInputDevice);
+            foreach (FilterInfo device in filter)
+                cbdoBox.Items.Add(device.Name);
+            cbdoBox.SelectedIndex = 0;
+            device = new VideoCaptureDevice();
+
+            ///                               ///
+            /// Voice Gender & Greetings      ///   
+            ///                               ///
+            ///                               ///
+            s.SelectVoiceByHints(VoiceGender.Female);
+
+            ///                               ///
+            ///         Command List          ///   
+            ///                               ///
+            Choices list = new Choices();
+            list.Add(File.ReadAllLines(@"C:\Users\D3X\Desktop\ASD\ASD\FaceRecCMD.txt"));
+
+            Grammar gm = new Grammar(new GrammarBuilder(list));
+
+            try
+            {
+                sr.RequestRecognizerUpdate();
+                sr.LoadGrammar(gm);
+                sr.SpeechRecognized += Sr_SpeechRecognized;
+                sr.SetInputToDefaultAudioDevice();
+                sr.RecognizeAsync(RecognizeMode.Multiple);
+
+            }
+            catch
+            {
+                return;
+            }
+            pb.ClearContent();
+            s.Speak(pb);
+            device = new VideoCaptureDevice(filter[cbdoBox.SelectedIndex].MonikerString);
+            device.NewFrame += Device_NewFrame;
+            device.Start();
+        }
+        public void Say(string phrase)
+        {
+            s.SpeakAsync(phrase);
+
+        }
+
+        private void Sr_SpeechRecognized(object sender, SpeechRecognizedEventArgs e)
+        {
+            string speechSaid = e.Result.Text;
+
+            switch (speechSaid)
+            {
+
+
+                case ("good morning"):
+                    Say("good afternoon");
+                    break;
+
+                case ("lock"):
+                    Say("the drawer is lock");
+                    port.Open();
+                    port.WriteLine("A");
+                    port.Close();
+                    MessageBox.Show("The Drawer is Locked");
+                    break;
+
+                case ("open"):
+                    Say("the drawer is open");
+                    port.Open();
+                    port.WriteLine("B");
+                    port.Close();
+                    Process.Start(@"C:\Users\D3X\Desktop\ASD\ASD\EmailSender.pyw");
+                    MessageBox.Show("The Drawer is Open");
+                    break;
+            }
+        }
+
+        private void button1_Click(object sender, EventArgs e)
+        {
+            device = new VideoCaptureDevice(filter[cbdoBox.SelectedIndex].MonikerString);
+            device.NewFrame += Device_NewFrame;
+            device.Start();
+        }
+
+        static readonly CascadeClassifier cascadeClassifier = new CascadeClassifier("har.xml");
+
+        private void Device_NewFrame(object sender, NewFrameEventArgs eventArgs)
+        {
+            Bitmap bitmap = (Bitmap)eventArgs.Frame.Clone();
+            Image<Bgr, byte> grayImage = new Image<Bgr, byte>(bitmap);
+            Rectangle[] rectangles = cascadeClassifier.DetectMultiScale(grayImage, 1.2, 1);
+            foreach (Rectangle rectangle in rectangles)
+            {
+                using (Graphics graphics = Graphics.FromImage(bitmap))
+                {
+                    using (Pen pen = new Pen(Color.Red, 1))
+                    {
+                        graphics.DrawRectangle(pen, rectangle);
+                    }
+                }
+            }
+            pictureBox1.Image = bitmap;
+        }
+
+        private void FaceRec_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            if (device.IsRunning)
+                device.Stop();
+        }
+
+        private void button2_Click(object sender, EventArgs e)
+        {
+            TestForm form = new TestForm();
+            form.ShowDialog();
+            Close();
+        }
+
+        private void button3_Click(object sender, EventArgs e)
+        {
+            picBox.SendToBack();
+        }
+    }
+}
