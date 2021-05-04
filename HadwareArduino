@@ -1,0 +1,120 @@
+int buzzer = A0;
+/// If you want buzzer to make a sound do 256, if not do 0.
+int LEDS = 12;
+int ServoLED = 13;
+int ConstantLED = 11;
+
+///Servo Controls
+
+#include <Servo.h>
+Servo lock;
+int servoPin = 10;
+int Open = 180;
+int Close = 90;
+
+
+void setup() {
+ Serial.begin(9600);
+ pinMode(13,OUTPUT);
+ pinMode(12,OUTPUT);
+ pinMode(11,OUTPUT);
+ pinMode(A0,OUTPUT);
+
+ lock.attach(servoPin);
+ 
+/// Constant LED
+digitalWrite(ConstantLED, HIGH);
+lock.write(Open);
+
+
+
+}
+
+void blinking(){
+digitalWrite(LEDS, HIGH);
+  analogWrite(buzzer, 255);
+  delay(100);
+  digitalWrite(LEDS, LOW);
+  analogWrite(buzzer, 0);
+  delay(100);
+  digitalWrite(LEDS, HIGH);
+  analogWrite(buzzer, 255);
+  delay(100);
+  digitalWrite(LEDS, LOW);
+  analogWrite(buzzer, 0);
+  delay(100);
+  digitalWrite(LEDS, HIGH);
+  analogWrite(buzzer, 255);
+  delay(100);
+  digitalWrite(LEDS, LOW);
+  analogWrite(buzzer, 0);
+  delay(100);
+  digitalWrite(LEDS, HIGH);
+  analogWrite(buzzer, 255);
+  delay(100);
+  digitalWrite(LEDS, LOW);
+  analogWrite(buzzer, 0);
+  delay(100);
+  
+}
+
+
+void loop() {
+
+
+  char id = Serial.read();
+  if (id == 'A')
+  {
+  digitalWrite(ServoLED, LOW);
+  ///BLINKING
+   blinking();
+  lock.write(Close);
+  }
+
+  if (id == 'B')
+  {
+  ///SERVO LED ON or OFF
+  digitalWrite(ServoLED, HIGH);
+  analogWrite(buzzer, 255);
+  delay(100);
+  analogWrite(buzzer, 0);
+  delay(100);
+  analogWrite(buzzer, 255);
+  delay(100);
+  analogWrite(buzzer, 0);
+  delay(100);
+  lock.write(Open);
+  
+  }
+
+  if (id == 'S')
+  {
+    lock.write(Open);
+  }
+  
+  if (id == 'F')
+  {
+    lock.write(Close);
+  }
+  
+  if (id == 'L')
+  {
+  digitalWrite(LEDS, HIGH);
+  digitalWrite(ServoLED, HIGH);
+  }
+  
+  if (id == 'O')
+  {
+  digitalWrite(LEDS, LOW);
+  digitalWrite(ServoLED, LOW); 
+  }
+  
+  if (id == 'C')
+  {
+    analogWrite(buzzer, 255);
+  }
+  if (id == 'N')
+  {
+    analogWrite(buzzer, 0);
+  }
+}
