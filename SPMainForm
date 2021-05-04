@@ -1,0 +1,80 @@
+using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Data;
+using System.Drawing;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows.Forms;
+using System.Speech;
+using System.Speech.Synthesis;
+using System.Speech.Recognition;
+using System.IO;
+
+namespace ASD
+{
+    public partial class Main : Form
+    {
+        public Main()
+        {
+            InitializeComponent();
+        }
+        SpeechSynthesizer s = new SpeechSynthesizer();
+        SpeechRecognitionEngine sr = new SpeechRecognitionEngine();
+        PromptBuilder pb = new PromptBuilder();
+        bool FacRec;
+        
+
+        private void Form1_Load(object sender, EventArgs e)
+        {
+
+            FacRec = false;
+            s.SelectVoiceByHints(VoiceGender.Female);
+            Choices list = new Choices();
+            list.Add(File.ReadAllLines(@"C:\Users\D3X\Desktop\ASD\ASD\Commands.txt"));
+
+            Grammar gm = new Grammar(new GrammarBuilder(list));
+
+            try
+            {
+                sr.RequestRecognizerUpdate();
+                sr.LoadGrammar(gm);
+                sr.SpeechRecognized += Sr_SpeechRecognized;
+                sr.SetInputToDefaultAudioDevice();
+                sr.RecognizeAsync(RecognizeMode.Multiple);
+
+            }
+            catch
+            {
+                return;
+            }
+            pb.ClearContent();
+            s.Speak(pb);
+
+        }
+        public void Say(string phrase)
+        {
+            s.SpeakAsync(phrase);
+
+        }
+        private void Sr_SpeechRecognized(object sender, SpeechRecognizedEventArgs e)
+        {
+            string speechSaid = e.Result.Text;
+
+            switch (speechSaid)
+            {
+                case ("good morning"):
+                    Say("good morning");
+                    break;
+
+                case ("activate face recognition"):
+                    Say("face recognition activated");
+                    Hide();
+                    FaceRec form = new FaceRec();
+                    form.ShowDialog();
+                    Close();
+                    break;
+
+            }
+        }
