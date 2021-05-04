@@ -1,0 +1,81 @@
+using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Data;
+using System.Drawing;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows.Forms;
+using System.IO;
+using System.IO.Ports;
+
+namespace ASD
+{
+    public partial class TestForm : Form
+    {
+        SerialPort port = new SerialPort("COM5", 9600, Parity.None, 8, StopBits.One);
+
+        public TestForm()
+        {
+            InitializeComponent();
+        }
+
+        private void TestForm_Load(object sender, EventArgs e)
+        {
+
+        }
+
+        /////SERVO////
+        private void btnServoOn_Click(object sender, EventArgs e)
+        {
+            port.Open();
+            port.WriteLine("S");
+            port.Close();
+        }
+
+        private void btnServoOff_Click(object sender, EventArgs e)
+        {
+            port.Open();
+            port.WriteLine("F");
+            port.Close();
+        }
+        /////LED////
+        private void btnLEDOn_Click(object sender, EventArgs e)
+        {
+            port.Open();
+            port.WriteLine("L");
+            port.Close();
+        }
+
+        private void btnLEDOff_Click(object sender, EventArgs e)
+        {
+            port.Open();
+            port.WriteLine("O");
+            port.Close();
+        }
+
+        ////////Buzzer////
+        private void btnBuzzerOn_Click(object sender, EventArgs e)
+        {
+            port.Open();
+            port.WriteLine("C");
+            port.Close();
+        }
+
+        private void btnBuzzerOff_Click(object sender, EventArgs e)
+        {
+            port.Open();
+            port.WriteLine("N");
+            port.Close();
+        }
+
+        private void pictureBox1_Click(object sender, EventArgs e)
+        {
+            FaceRec form = new FaceRec();
+            Hide();
+            form.ShowDialog();
+            Close();
+        }
+    }
+}
